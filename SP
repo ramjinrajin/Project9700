@@ -1,0 +1,69 @@
+CREATE OR REPLACE PROCEDURE "PPSDBA"."EV_ADDEVENT" (
+    p_EVENT_TYPE_ID NUMBER,
+    p_EVENT_STATUS VARCHAR2(255),
+    p_EVENT_MESSAGE VARCHAR2(512),
+    p_NOTES VARCHAR2(255),
+    p_USER_NAME VARCHAR2(30),
+    p_EVENT_DATE DATE,
+    p_COMPONENT_INFO1 VARCHAR2(50),
+    p_COMPONENT_INFO2 VARCHAR2(50),
+    p_COMPONENT_INFO3 VARCHAR2(50),
+    p_SOURCE VARCHAR2(20),
+    p_PROCESSED_DATE DATE,
+    p_TERMINAL VARCHAR2(50),
+    p_ERROR_MESSAGE VARCHAR2(512),
+    p_ERROR_CODE NUMBER
+) AS
+    v_Event_Type_Id NUMBER := 0; -- Default to 0
+BEGIN
+    -- Check if the provided EVENT_TYPE_ID exists in VENDOR_EVENT_TYPE_DICT
+    SELECT Event_Type_Id INTO v_Event_Type_Id
+    FROM PPSDBA.VENDOR_EVENT_TYPE_DICT
+    WHERE Event_Type_Id = p_EVENT_TYPE_ID;
+
+    -- If no rows are returned, v_Event_Type_Id remains 0
+
+    BEGIN
+        INSERT INTO PPSDBA.VENDOR_EVENT_LOG (
+            EVENT_TYPE_ID,
+            EVENT_STATUS,
+            EVENT_MESSAGE,
+            NOTES,
+            USER_NAME,
+            EVENT_DATE,
+            COMPONENT_INFO1,
+            COMPONENT_INFO2,
+            COMPONENT_INFO3,
+            SOURCE,
+            PROCESSED_DATE,
+            TERMINAL,
+            ERROR_MESSAGE,
+            ERROR_CODE
+        ) VALUES (
+            v_Event_Type_Id,
+            p_EVENT_STATUS,
+            p_EVENT_MESSAGE,
+            p_NOTES,
+            p_USER_NAME,
+            p_EVENT_DATE,
+            p_COMPONENT_INFO1,
+            p_COMPONENT_INFO2,
+            p_COMPONENT_INFO3,
+            p_SOURCE,
+            p_PROCESSED_DATE,
+            p_TERMINAL,
+            p_ERROR_MESSAGE,
+            p_ERROR_CODE
+        );
+        COMMIT;
+        DBMS_OUTPUT.PUT_LINE('Event inserted successfully');
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('Invalid Event Type');
+        WHEN OTHERS THEN
+            ROLLBACK; -- Rollback the transaction on error
+            DBMS_OUTPUT.PUT_LINE('An Error Occurred: ' || SQLERRM);
+    END;
+END;
+/
+GRANT EXECUTE ON "PPSDBA"."EV_ADDEVENT" TO AUTOMED_APP_ROLE;
